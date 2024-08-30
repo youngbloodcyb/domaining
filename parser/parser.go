@@ -145,6 +145,7 @@ func ParseCSVToSQLite(csvFilePath, dbFilePath string) error {
 
 	// Create a new CSV reader
 	reader := csv.NewReader(file)
+	reader.FieldsPerRecord = -1 // Allow variable number of fields per record
 
 	// Read all records
 	records, err := reader.ReadAll()
@@ -152,8 +153,8 @@ func ParseCSVToSQLite(csvFilePath, dbFilePath string) error {
 		return fmt.Errorf("error reading CSV: %v", err)
 	}
 
-	if len(records) == 0 {
-		return fmt.Errorf("CSV file is empty")
+	if len(records) < 2 {
+		return fmt.Errorf("CSV file has no data rows")
 	}
 
 	// Open the database
@@ -164,10 +165,10 @@ func ParseCSVToSQLite(csvFilePath, dbFilePath string) error {
 	defer db.Close()
 
 	// Create the table
-	columns := records[0]
+	columns := records[1] // Use the second row as the column names
 	columnsSQL := make([]string, len(columns))
 	for i, col := range columns {
-		columnsSQL[i] = fmt.Sprintf("%s TEXT", col)
+		columnsSQL[i] = fmt.Sprintf("`%s` TEXT", col)
 	}
 	err = db.CreateTable("domains", columnsSQL)
 	if err != nil {
@@ -175,7 +176,7 @@ func ParseCSVToSQLite(csvFilePath, dbFilePath string) error {
 	}
 
 	// Insert the data
-	for _, record := range records[1:] { // Skip the header row
+	for _, record := range records[2:] { // Skip the header row and column names row
 		// Convert []string to []interface{}
 		values := make([]interface{}, len(record))
 		for i, v := range record {
@@ -188,6 +189,6 @@ func ParseCSVToSQLite(csvFilePath, dbFilePath string) error {
 		}
 	}
 
-	fmt.Printf("Successfully inserted %d records into the database.\n", len(records)-1)
+	fmt.Printf("Successfully inserted %d records into the database.\n", len(records)-2)
 	return nil
 }
