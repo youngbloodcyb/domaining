@@ -6,12 +6,13 @@ import (
 	"os"
 
 	"domaining/database"
-	"domaining/parser"
+	"domaining/dropcatch"
+	"domaining/utils"
 )
 
 func main() {
 	// Step 1: Fetch the CSV URL
-	fileUrl, fileName, err := parser.FetchDropcatchUrl()
+	fileUrl, fileName, err := dropcatch.FetchCSVUrl()
 	if err != nil {
 		log.Fatalf("Error fetching CSV URL: %v", err)
 	}
@@ -20,7 +21,7 @@ func main() {
 	fmt.Printf("File name: %s\n", fileName)
 
 	// Step 2: Download the CSV file
-	err = parser.DownloadDropcatchFile(fileUrl, fileName)
+	err = dropcatch.DownloadCSVFile(fileUrl, fileName)
 	if err != nil {
 		log.Fatalf("Error downloading CSV file: %v", err)
 	}
@@ -28,7 +29,7 @@ func main() {
 	fmt.Printf("Successfully downloaded: %s\n", fileName)
 
 	// Step 3: Unzip the file
-	csvFileName, err := parser.UnzipFile(fileName)
+	csvFileName, err := utils.UnzipFile(fileName)
 	if err != nil {
 		log.Fatalf("Error unzipping file: %v", err)
 	}
@@ -44,7 +45,7 @@ func main() {
 	defer db.Close()
 
 	// Step 5: Parse CSV and load into SQLite
-	err = parser.ParseCSVToSQLite(csvFileName, dbPath)
+	err = dropcatch.ParseCSVToSQLite(csvFileName, dbPath)
 	if err != nil {
 		log.Fatalf("Error parsing CSV to SQLite: %v", err)
 	}
