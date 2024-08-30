@@ -31,7 +31,7 @@ func New(dbPath string) (*DB, error) {
 
 // CreateTable creates a new table with the given name and columns
 func (db *DB) CreateTable(tableName string, columns []string) error {
-	createTableSQL := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (%s)", tableName, columns)
+	createTableSQL := fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (%s)", tableName, strings.Join(columns, ", "))
 	_, err := db.Exec(createTableSQL)
 	if err != nil {
 		return fmt.Errorf("error creating table: %v", err)
@@ -41,20 +41,21 @@ func (db *DB) CreateTable(tableName string, columns []string) error {
 
 // InsertRecord inserts a single record into the specified table
 func (db *DB) InsertRecord(tableName string, columns []string, values []interface{}) error {
-	placeholders := make([]string, len(values))
-	for i := range placeholders {
-		placeholders[i] = "?"
-	}
-	insertSQL := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",
-		tableName,
-		strings.Join(columns, ", "),
-		strings.Join(placeholders, ", "))
+    placeholders := make([]string, len(values))
+    for i := range placeholders {
+        placeholders[i] = "?"
+    }
 
-	_, err := db.Exec(insertSQL, values...)
-	if err != nil {
-		return fmt.Errorf("error inserting record: %v", err)
-	}
-	return nil
+    insertSQL := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",
+        tableName,
+        strings.Join(columns, ", "),
+        strings.Join(placeholders, ", "))
+
+    _, err := db.Exec(insertSQL, values...)
+    if err != nil {
+        return fmt.Errorf("error inserting record: %v", err)
+    }
+    return nil
 }
 
 // Close closes the database connection

@@ -124,24 +124,35 @@ func ParseCSVToSQLite(csvFilePath, dbFilePath string) error {
 	}
 	defer db.Close()
 
-	// Create the table
-	columns := records[1] // Use the second row as the column names
-	columnsSQL := make([]string, len(columns))
-	for i, col := range columns {
-		columnsSQL[i] = fmt.Sprintf("`%s` TEXT", col)
+	// Define hard-coded column names
+	columns := []string{"domain", "tld", "domain_type", "auction_end"}
+
+	// Print the hard-coded columns for debugging
+	fmt.Println("Columns:", columns)
+
+	// Define the SQL column types (assuming all are TEXT for simplicity)
+	columnsSQL := []string{
+		"`domain` TEXT",
+		"`tld` TEXT",
+		"`domain_type` TEXT",
+		"`auction_end` TEXT",
 	}
+
+	// Create the table with hard-coded column definitions
 	err = db.CreateTable("domains", columnsSQL)
 	if err != nil {
 		return fmt.Errorf("error creating table: %v", err)
 	}
 
 	// Insert the data
-	for _, record := range records[2:] { // Skip the header row and column names row
+	for _, record := range records[2:] { // Skip the header row
 		// Convert []string to []interface{}
-		values := make([]interface{}, len(record))
-		for i, v := range record {
-			values[i] = v
-		}
+		values := []interface{}{
+        	record[0], // domain
+            record[1], // tld
+            record[2], // type
+            record[3], // auction_end
+        }
 
 		err := db.InsertRecord("domains", columns, values)
 		if err != nil {
@@ -149,6 +160,6 @@ func ParseCSVToSQLite(csvFilePath, dbFilePath string) error {
 		}
 	}
 
-	fmt.Printf("Successfully inserted %d records into the database.\n", len(records)-2)
+	fmt.Printf("Successfully inserted %d records into the database.\n", len(records)-1)
 	return nil
 }
